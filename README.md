@@ -1,12 +1,14 @@
 
-
 # Installation
 
 You need Node.js and npm installed. You also need the Typescript compiler (tsc). If they are not:
 ```
-sudo apt-get install nodejs npm
-sudo npm install typescript
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get install -y nodejs
+sudo apt-get install npm
+sudo npm install -g typescript
 ```
+
 
 Then, in the directory where you have cloned the repo:
 ```
@@ -18,4 +20,11 @@ tsc -p tsconfig.json
 
 ```
 node out/main.js --help
+```
+
+# Troubleshooting
+
+If you get errors when installing typescript, try:
+```
+npm config set strict-ssl false
 ```
