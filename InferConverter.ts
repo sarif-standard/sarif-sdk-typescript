@@ -1,6 +1,6 @@
 import {Sarif, Run, Result, Rule, CodeFlow, AnnotatedCodeLocation, File, Location} from "./sarif/Sarif"
 import * as path from 'path';
-import * as infer from "./types/infer";
+import {report, json_trace_item} from "./types/infer";
 import Uri from "vscode-uri";
 import * as fs from 'fs';
 import * as mime from 'mime';
@@ -9,7 +9,7 @@ import Converter from './Converter';
 
 export default class InferConverter extends Converter {
 
-    _input: infer.report;
+    _input: report;
     _output: Sarif;
 
     _files: Map<string,File> = new Map<string,File>();
@@ -78,7 +78,7 @@ export default class InferConverter extends Converter {
         }
     }
 
-    private bugTraceToCodeFlow(trace: infer.json_trace_item[]): CodeFlow {
+    private bugTraceToCodeFlow(trace: json_trace_item[]): CodeFlow {
         let codeFlow: CodeFlow = {
             locations: [] 
         };
