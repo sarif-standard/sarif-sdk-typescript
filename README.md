@@ -1,11 +1,9 @@
-
 # Installation
 
 You need Node.js and npm installed. You also need the Typescript compiler (tsc). If they are not:
 ```
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
-sudo apt-get install npm
 sudo npm install -g typescript
 ```
 
