@@ -8,7 +8,7 @@ import * as fs from "fs";
 class Startup {
     public static main(): number {
         let argv = yargs
-        .usage('Usage: $0 <input file to convert> -f <plist|infer> [options]')
+        .usage('Usage: $0 -f <plist|infer> [options] <list of files to convert> ')
         .option('f', {required: true})
         .alias('f', 'format')
         .option('projectPath', {required: true})
@@ -21,24 +21,27 @@ class Startup {
         .demandCommand(1)
         .argv;
 
-        let data = fs.readFileSync(argv._[0]).toString();
         let projectpath = argv.projectPath;
         if (!projectpath) {
             projectpath = "./";
         }
         var converter: Converter;
         if (argv.f == 'plist') {
-            converter = new CSAPlistConverter(data, projectpath, !argv.noMd5);
+            converter = new CSAPlistConverter(projectpath, !argv.noMd5);
         }
         else if (argv.f == 'infer') {
-            converter = new InferConverter(data, projectpath, !argv.noMd5);
+            converter = new InferConverter(projectpath, !argv.noMd5);
         }
         else {
             console.error('no converter for format ' + argv.f + '. Please use plist or infer');
             return 1;
         }
+        argv._.forEach(filename => {
+            let data = fs.readFileSync(filename).toString();
+            converter.convert(data);
+        });
         let outputFileName = argv.o;
-        converter.convert(outputFileName);
+        converter.generateOutput(outputFileName);
         return 0;
     }
 }

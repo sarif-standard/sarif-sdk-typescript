@@ -17,5 +17,7 @@ export default abstract class Converter {
         };
     }
     
-    public abstract convert(outputFileName: string): void;
+    public abstract convert(data: string): void;
+
+    public abstract generateOutput (outputFileName: string): void;
 }

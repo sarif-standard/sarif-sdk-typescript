@@ -9,17 +9,18 @@ import Converter from './Converter';
 
 export default class InferConverter extends Converter {
 
-    _input: report;
+    _current_input: report;
     _output: Sarif;
 
     _files: Map<string,File> = new Map<string,File>();
 
-    constructor(input: string, project_path: string, computeMd5: boolean) {
+    constructor(project_path: string, computeMd5: boolean) {
         super(project_path, computeMd5);
-        this._input = JSON.parse(input);
     }
 
-    public convert(outputFileName: string): void {
+    public convert(input: string): void {
+        this._current_input = JSON.parse(input);
+        this._files.clear();
         let run: Run = {
             tool: {
                 name: "Infer",
@@ -28,7 +29,7 @@ export default class InferConverter extends Converter {
             rules: {}
         };
         this._output.runs.push(run);
-        this._input.forEach(k => {
+        this._current_input.forEach(k => {
             // create the Rule object if it doesn't already exist
             if (!(k.bug_type in run.rules)) {
                 let rule : Rule = {
@@ -61,6 +62,9 @@ export default class InferConverter extends Converter {
         this._files.forEach((file,name) => {
             run.files[name] = file;
         });
+    }
+
+    public generateOutput(outputFileName: string) {
         let stringOutput = JSON.stringify(this._output, null, 2);
         if (outputFileName) {
             fs.writeFileSync(outputFileName,stringOutput);

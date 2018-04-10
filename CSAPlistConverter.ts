@@ -13,32 +13,32 @@ var plistParser = require('plist');
 export default class CSAPlistConverter extends Converter {
 
     _project_path: string;
-    _input: plist.PlistJson;
+    _current_input: plist.PlistJson;
     _output: Sarif;
 
     _files: Map<string,File> = new Map<string,File>();
 
-    constructor(input: string, project_path: string, computeMd5: boolean) {
+    constructor(project_path: string, computeMd5: boolean) {
         super(project_path, computeMd5);
-        this._input = plistParser.parse(input);
     }
 
-    public convert(outputFileName: string) {
+    public convert(input: string) {
+        this._current_input = plistParser.parse(input);
+        this._files.clear();
         let run: Run = {
             tool: {
-                name: this._input.clang_version,
-                fullName: this._input.clang_version,
+                name: this._current_input.clang_version,
+                fullName: this._current_input.clang_version,
             },
             results: [],
-            rules: {}
+            rules: {},
         };
-        this._input.diagnostics.forEach(diagnostic => {
+        this._current_input.diagnostics.forEach(diagnostic => {
             // create the Rule object if it doesn't already exist
             if (!(diagnostic.check_name in run.rules)) {
                 let rule : Rule = {
                     id: diagnostic.check_name,
                     name: diagnostic.check_name,
-                    
                 }
                 run.rules[diagnostic.check_name] = rule;
             }
@@ -49,11 +49,15 @@ export default class CSAPlistConverter extends Converter {
                 codeFlows: [this.genCodeFlow(diagnostic.path)],
                 locations: [{
                     resultFile: {
-                        uri: this.getUri(this._input.files[diagnostic.location.file]),
+                        uri: this.getUri(this._current_input.files[diagnostic.location.file]),
                         region: this.genRegion(diagnostic.location)                    }
                 }] 
             };
             run.results.push(res);
+        });
+        // make sure we create a File object for each file mentioned in the plist file
+        this._current_input.files.forEach(filename => {
+            this.getUri(filename);
         });
         // adding files that appear in results
         run.files = {};
@@ -62,6 +66,9 @@ export default class CSAPlistConverter extends Converter {
         });
 
         this._output.runs.push(run);
+    }
+
+    public generateOutput(outputFileName: string) {
         let stringOutput = JSON.stringify(this._output, null, 2);
         if (outputFileName) {
             fs.writeFileSync(outputFileName,stringOutput);
@@ -80,7 +87,7 @@ export default class CSAPlistConverter extends Converter {
                 let step : AnnotatedCodeLocation = {};
                 step.message = pathstep.message;
                 step.physicalLocation = {
-                    uri: this.getUri(this._input.files[pathstep.location.file]),
+                    uri: this.getUri(this._current_input.files[pathstep.location.file]),
                     region: pathstep.ranges? this.genRegionFromRanges(pathstep.ranges) : this.genRegion(pathstep.location)
                 };
                 
