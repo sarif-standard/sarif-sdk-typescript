@@ -26,3 +26,6 @@ If you get errors when installing typescript, try:
 ```
 npm config set strict-ssl false
 ```
+
+Sometimes, you can also have issues with npm permissions:
+https://docs.npmjs.com/getting-started/fixing-npm-permissions
