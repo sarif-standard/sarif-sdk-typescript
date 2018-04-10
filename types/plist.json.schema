@@ -1,0 +1,120 @@
+{
+  "type": "object",
+  "required": [],
+  "properties": {
+    "clang_version": {
+      "type": "string"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "edges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {
+                      "start": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {
+                            "line": {
+                              "type": "number"
+                            },
+                            "col": {
+                              "type": "number"
+                            },
+                            "file": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "end": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {
+                            "line": {
+                              "type": "number"
+                            },
+                            "col": {
+                              "type": "number"
+                            },
+                            "file": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "check_name": {
+            "type": "string"
+          },
+          "issue_hash_content_of_line_in_context": {
+            "type": "string"
+          },
+          "issue_context_kind": {
+            "type": "string"
+          },
+          "issue_context": {
+            "type": "string"
+          },
+          "issue_hash_function_offset": {
+            "type": "string"
+          },
+          "location": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "line": {
+                "type": "number"
+              },
+              "col": {
+                "type": "number"
+              },
+              "file": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
