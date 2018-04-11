@@ -79,6 +79,7 @@ export default class CSAPlistConverter extends Converter {
 
     private genCodeFlow(trace: plist.PathStep[]): CodeFlow {
         let locations: AnnotatedCodeLocation[] = [];
+        let currentStep = 1;
         trace.forEach(pathstep => {
             if (pathstep.edges) {
                 pathstep.edges.forEach(edge => {
@@ -90,7 +91,7 @@ export default class CSAPlistConverter extends Converter {
                     uri: this.getUri(this._current_input.files[pathstep.location.file]),
                     region: pathstep.ranges? this.genRegionFromRanges(pathstep.ranges) : this.genRegion(pathstep.location)
                 };
-                
+                step.step = currentStep++; 
                 locations.push(step)
             }
         }); 
@@ -102,7 +103,7 @@ export default class CSAPlistConverter extends Converter {
     private genRegion(location: plist.Location): any {
         return {
             startLine: location.line,
-            startcolumn: location.col
+            startColumn: location.col
         };
     }
 
@@ -136,13 +137,16 @@ export default class CSAPlistConverter extends Converter {
 
     private getUri(file: string): string {
         let absolutePath = path.join(this._project_path,file);
+        if (!fs.existsSync(absolutePath)) {
+            absolutePath = file;
+        }
         let uri = Uri.file(absolutePath);
         let stringUri = uri.toString();
         if (!(stringUri in this._files)) {
             this._files.set(stringUri,{
                 uri: stringUri,
                 mimeType: mime.getType(stringUri),
-                hashes: this._computeMd5 ? [{
+                hashes: (this._computeMd5 && fs.existsSync(uri.fsPath)) ? [{
                     value: md5(fs.readFileSync(uri.fsPath)),
                     algorithm: 'md5'
                 }]: undefined

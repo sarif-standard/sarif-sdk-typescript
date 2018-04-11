@@ -108,11 +108,6 @@ def gen_region(plistLocation):
     region.startColumn = plistLocation["col"]
     return region
 
-def gen_location(loc):
-    location = sarif.location()
-    analysisTarget = sarif.physicalLocation()
-    location.analysisTarget = analysisTarget
-
 def populate_results(plistDiagnostics, plistFiles, sarifResults, args):
     for d in plistDiagnostics:
         result = gen_result(d, plistFiles, args)
