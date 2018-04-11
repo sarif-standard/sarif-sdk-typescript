@@ -43,6 +43,7 @@ export default class InferConverter extends Converter {
                 message: k.qualifier,
                 level: this.kindToLevel(k.kind),
                 ruleKey: k.bug_type,
+                ruleId: k.bug_type,
                 codeFlows: [this.bugTraceToCodeFlow(k.bug_trace)],
                 // there is a single location in an Infer report
                 locations: [{ 
@@ -87,6 +88,9 @@ export default class InferConverter extends Converter {
             locations: [] 
         };
         let curStep = 1;
+        let previousItem: json_trace_item = undefined;
+        let previousLoc: AnnotatedCodeLocation = undefined;
+        let nextIsCallReturn = false;
         trace.forEach(item => {
             let loc: AnnotatedCodeLocation = {
                 step: curStep++,
@@ -99,7 +103,32 @@ export default class InferConverter extends Converter {
                     } 
                 },
             }
+            if (nextIsCallReturn) {
+                loc.kind = 'callReturn';
+            }
+            nextIsCallReturn = false;
+            item.node_tags.forEach(nodeTag => {
+                if (nodeTag.tag == 'kind') {
+                    switch (nodeTag.value) {
+                        case 'procedure_end':
+                            loc.kind = 'functionExit';
+                            nextIsCallReturn = true;
+                            break;
+                        case 'procedure_start':
+                            loc.kind = 'functionEnter';
+                            if (previousLoc) {
+                                previousLoc.kind = 'call';
+                            }
+                            break;
+                        case 'branch':
+                            loc.kind = 'branch';
+                            break;
+                    }
+                }
+            });
             codeFlow.locations.push(loc);
+            previousItem = item;
+            previousLoc = loc;
         });
         return codeFlow
     }

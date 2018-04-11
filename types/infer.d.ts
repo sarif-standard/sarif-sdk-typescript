@@ -6,6 +6,12 @@ export type json_trace_item = {
   line_number : number;
   column_number : number;
   description : string;
+  node_tags: node_tag[];
+}
+
+export type node_tag = {
+  tag: string;
+  value: string;
 }
 
 export type loc = {

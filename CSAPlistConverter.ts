@@ -46,6 +46,7 @@ export default class CSAPlistConverter extends Converter {
             let res : Result = {
                 message: diagnostic.description,
                 ruleId: diagnostic.check_name,
+                ruleKey: diagnostic.check_name,
                 codeFlows: [this.genCodeFlow(diagnostic.path)],
                 locations: [{
                     resultFile: {
@@ -80,6 +81,8 @@ export default class CSAPlistConverter extends Converter {
     private genCodeFlow(trace: plist.PathStep[]): CodeFlow {
         let locations: AnnotatedCodeLocation[] = [];
         let currentStep = 1;
+        let previousDepth = 0;
+        let previousStep: AnnotatedCodeLocation = undefined;
         trace.forEach(pathstep => {
             if (pathstep.edges) {
                 pathstep.edges.forEach(edge => {
@@ -92,7 +95,14 @@ export default class CSAPlistConverter extends Converter {
                     region: pathstep.ranges? this.genRegionFromRanges(pathstep.ranges) : this.genRegion(pathstep.location)
                 };
                 step.step = currentStep++; 
+                if (pathstep.depth < previousDepth) {
+                    step.kind = "callReturn";
+                } else if (pathstep.depth > previousDepth) {
+                    previousStep.kind = "call";
+                }
                 locations.push(step)
+                previousDepth = pathstep.depth;
+                previousStep = step;
             }
         }); 
         return {
