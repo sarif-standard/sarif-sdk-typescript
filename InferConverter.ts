@@ -138,14 +138,17 @@ export default class InferConverter extends Converter {
         let uri = Uri.file(absolutePath);
         let stringUri = uri.toString();
         if (!(stringUri in this._files)) {
-            this._files.set(stringUri,{
+            let file: File = {
                 uri: stringUri,
                 mimeType: mime.getType(stringUri),
-                hashes: this._computeMd5 ? [{
+            };
+            if (this._computeMd5 && fs.existsSync(uri.fsPath)) {
+                file.hashes = [{
                     value: md5(fs.readFileSync(uri.fsPath)),
                     algorithm: 'md5'
-                }] : undefined
-            });
+                }];
+            }
+            this._files.set(stringUri,file);
         }
         return stringUri;
     }
