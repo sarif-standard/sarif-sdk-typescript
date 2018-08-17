@@ -1,5 +1,5 @@
 
-import {Sarif, Run, Result, Rule, CodeFlow, AnnotatedCodeLocation, File, Location} from "./sarif/Sarif"
+import {Sarif, Run, Result, Rule, CodeFlow, ThreadFlow, ThreadFlowLocation, File, Location} from "./sarif/Sarif2"
 import * as path from 'path';
 import Uri from "vscode-uri"
 import * as fs from 'fs'
@@ -31,27 +31,35 @@ export default class CSAPlistConverter extends Converter {
                 fullName: this._current_input.clang_version,
             },
             results: [],
-            rules: {},
+            resources: {
+                rules: {},
+            },
         };
         this._current_input.diagnostics.forEach(diagnostic => {
             // create the Rule object if it doesn't already exist
-            if (!(diagnostic.check_name in run.rules)) {
+            if (!(diagnostic.check_name in run.resources.rules)) {
                 let rule : Rule = {
                     id: diagnostic.check_name,
-                    name: diagnostic.check_name,
+                    name: {
+                        text: diagnostic.check_name,
+                    }
                 }
-                run.rules[diagnostic.check_name] = rule;
+                run.resources.rules[diagnostic.check_name] = rule;
             }
             // create the Result object
             let res : Result = {
-                message: diagnostic.description,
+                message: {
+                    text: diagnostic.description,
+                },
                 ruleId: diagnostic.check_name,
-                ruleKey: diagnostic.check_name,
                 codeFlows: [this.genCodeFlow(diagnostic.path)],
                 locations: [{
-                    resultFile: {
-                        uri: this.getUri(this._current_input.files[diagnostic.location.file]),
-                        region: this.genRegion(diagnostic.location)                    }
+                    physicalLocation: {
+                        fileLocation: {
+                            uri: this.getUri(this._current_input.files[diagnostic.location.file]),
+                        },
+                        region: this.genRegion(diagnostic.location)                    
+                    }
                 }] 
             };
             run.results.push(res);
@@ -79,22 +87,29 @@ export default class CSAPlistConverter extends Converter {
     }
 
     private genCodeFlow(trace: plist.PathStep[]): CodeFlow {
-        let locations: AnnotatedCodeLocation[] = [];
+        let locations: ThreadFlowLocation[] = [];
         let currentStep = 1;
         let previousDepth = 0;
-        let previousStep: AnnotatedCodeLocation = undefined;
+        let previousStep: ThreadFlowLocation = undefined;
         trace.forEach(pathstep => {
             if (pathstep.edges) {
                 pathstep.edges.forEach(edge => {
                 });
             } else {
-                let step : AnnotatedCodeLocation = {};
-                step.message = pathstep.message;
-                step.physicalLocation = {
-                    uri: this.getUri(this._current_input.files[pathstep.location.file]),
-                    region: pathstep.ranges? this.genRegionFromRanges(pathstep.ranges) : this.genRegion(pathstep.location)
+                let step : ThreadFlowLocation = {
+                    step: currentStep++,
+                    location: {
+                        physicalLocation: {
+                            fileLocation: {
+                                uri: this.getUri(this._current_input.files[pathstep.location.file]),
+                            },
+                            region: pathstep.ranges? this.genRegionFromRanges(pathstep.ranges) : this.genRegion(pathstep.location)
+                        }
+                    }
                 };
-                step.step = currentStep++; 
+                step.location.physicalLocation.region.message = {
+                    text: pathstep.message
+                };
                 if (pathstep.depth < previousDepth) {
                     step.kind = "callReturn";
                 } else if (pathstep.depth > previousDepth) {
@@ -106,7 +121,9 @@ export default class CSAPlistConverter extends Converter {
             }
         }); 
         return {
-            locations: locations
+            threadFlows: [{
+                locations: locations
+            }]
         };
     }
 
@@ -154,7 +171,9 @@ export default class CSAPlistConverter extends Converter {
         let stringUri = uri.toString();
         if (!(stringUri in this._files)) {
             this._files.set(stringUri,{
-                uri: stringUri,
+                fileLocation: {
+                    uri: stringUri,
+                },
                 mimeType: mime.getType(stringUri),
                 hashes: (this._computeMd5 && fs.existsSync(uri.fsPath)) ? [{
                     value: md5(fs.readFileSync(uri.fsPath)),

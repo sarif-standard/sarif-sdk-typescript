@@ -1,4 +1,4 @@
-import {Sarif} from "./sarif/Sarif"
+import {Sarif} from "./sarif/Sarif2"
 
 
 export default abstract class Converter {
@@ -12,7 +12,7 @@ export default abstract class Converter {
         this._computeMd5 = computeMd5;
         this._output = { 
             $schema: "http://json-schema.org/draft-04/schema#",
-            version: "1.0.0",
+            version: "2.0.0",
             runs: []
         };
     }

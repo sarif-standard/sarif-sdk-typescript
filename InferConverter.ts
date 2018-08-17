@@ -1,4 +1,4 @@
-import {Sarif, Run, Result, Rule, CodeFlow, AnnotatedCodeLocation, File, Location} from "./sarif/Sarif"
+import {Sarif, Run, Result, Rule, CodeFlow, ThreadFlow, ThreadFlowLocation, File, Location} from "./sarif/Sarif2"
 import * as path from 'path';
 import {report, json_trace_item} from "./types/infer";
 import Uri from "vscode-uri";
@@ -26,29 +26,36 @@ export default class InferConverter extends Converter {
                 name: "Infer",
             },
             results: [],
-            rules: {}
+            resources: {
+                rules: {}
+            }
         };
         this._output.runs.push(run);
         this._current_input.forEach(k => {
             // create the Rule object if it doesn't already exist
-            if (!(k.bug_type in run.rules)) {
+            if (!(k.bug_type in run.resources.rules)) {
                 let rule : Rule = {
                     id: k.bug_type,
-                    name: k.bug_type_hum
+                    name: {
+                        text: k.bug_type_hum
+                    }
                 }
-                run.rules[k.bug_type] = rule;
+                run.resources.rules[k.bug_type] = rule;
             }
             // create the Result object
             let res : Result = {
-                message: k.qualifier,
+                message: {
+                    text: k.qualifier,
+                },
                 level: this.kindToLevel(k.kind),
-                ruleKey: k.bug_type,
                 ruleId: k.bug_type,
                 codeFlows: [this.bugTraceToCodeFlow(k.bug_trace)],
                 // there is a single location in an Infer report
                 locations: [{ 
-                    resultFile: {
-                        uri: this.getUri(k.file),
+                    physicalLocation: {
+                        fileLocation: {
+                            uri: this.getUri(k.file)
+                        },
                         region: {
                             startLine: k.line,
                             startColumn: k.column
@@ -84,29 +91,36 @@ export default class InferConverter extends Converter {
     }
 
     private bugTraceToCodeFlow(trace: json_trace_item[]): CodeFlow {
-        let codeFlow: CodeFlow = {
-            locations: [] 
-        };
+        let threadFlow: ThreadFlow = {
+            locations: [],
+        }
         let curStep = 1;
         let previousItem: json_trace_item = undefined;
-        let previousLoc: AnnotatedCodeLocation = undefined;
+        let previousLoc: ThreadFlowLocation = undefined;
         let nextIsCallReturn = false;
         trace.forEach(item => {
-            let loc: AnnotatedCodeLocation = {
+            let loc: ThreadFlowLocation = {
                 step: curStep++,
-                message: item.description,
-                physicalLocation: {
-                    uri: this.getUri(item.filename),
-                    region: {
-                        startLine: item.line_number,
-                        startColumn: item.column_number
-                    } 
-                },
+                location: {
+                    physicalLocation: {
+                        fileLocation: {
+                            uri: this.getUri(item.filename),
+                        },
+                        region: {
+                            startLine: item.line_number,
+                            startColumn: item.column_number,
+                            message: {
+                                text: item.description,
+                            }
+                        },
+                    },
+                }
             }
             if (nextIsCallReturn) {
                 loc.kind = 'callReturn';
             }
             nextIsCallReturn = false;
+            if (item.node_tags) {
             item.node_tags.forEach(nodeTag => {
                 if (nodeTag.tag == 'kind') {
                     switch (nodeTag.value) {
@@ -126,10 +140,14 @@ export default class InferConverter extends Converter {
                     }
                 }
             });
-            codeFlow.locations.push(loc);
+            }
+            threadFlow.locations.push(loc);
             previousItem = item;
             previousLoc = loc;
         });
+        let codeFlow: CodeFlow = {
+            threadFlows: [threadFlow] 
+        };
         return codeFlow
     }
 
@@ -139,7 +157,9 @@ export default class InferConverter extends Converter {
         let stringUri = uri.toString();
         if (!(stringUri in this._files)) {
             let file: File = {
-                uri: stringUri,
+                fileLocation: {
+                    uri: stringUri,
+                },
                 mimeType: mime.getType(stringUri),
             };
             if (this._computeMd5 && fs.existsSync(uri.fsPath)) {
