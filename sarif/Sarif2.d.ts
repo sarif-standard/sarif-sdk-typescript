@@ -1232,10 +1232,6 @@ export interface StackFrame {
       };
     };
     /**
-     * The human-readable fully qualified name of the logical location. If run.logicalLocations is present, this value matches a property name within that object, from which further information about the logical location can be obtained.
-     */
-    fullyQualifiedLogicalName?: string;
-    /**
      * A message relevant to the location.
      */
     message?: {
