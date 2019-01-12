@@ -9,8 +9,7 @@ of which happen to be JSON:
 Nothing herein takes care of running those tools. This code will only convert their
 output files to SARIF.
 
-This version supports the version 2 of SARIF as defined in
-[Committee Specification Draft 1] (https://github.com/oasis-tcs/sarif-spec/blob/735f29242a5a0d533eaa8234e6cbc3257d632344/Documents/CommitteeSpecificationDrafts/CSD.1/sarif-schema.json).
+This version supports the version 2 of SARIF as defined in [Committee Specification Draft 1](https://github.com/oasis-tcs/sarif-spec/blob/735f29242a5a0d533eaa8234e6cbc3257d632344/Documents/CommitteeSpecificationDrafts/CSD.1/sarif-schema.json).
 Support for subsequent versions may become available.
 
 
@@ -42,8 +41,7 @@ node out/main.js --help
 
 If you wish to modify these converters, note that the Typescript
 object models in the directory sarif are automatically derived
-from the JSON schema specification using [json-schema-to-typescript]
-(https://www.npmjs.com/package/json-schema-to-typescript).
+from the JSON schema specification using [json-schema-to-typescript](https://www.npmjs.com/package/json-schema-to-typescript).
 To be self-contained, this repo contains a copy of the specification.
 
 # Troubleshooting
@@ -53,6 +51,5 @@ If you get errors when installing typescript, try:
 npm config set strict-ssl false
 ```
 
-Sometimes, you can also have issues with [npm permissions]
-(https://docs.npmjs.com/getting-started/fixing-npm-permissions).
+Sometimes, you can also have issues with [npm permissions](https://docs.npmjs.com/getting-started/fixing-npm-permissions).
 
